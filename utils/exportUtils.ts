@@ -59,7 +59,8 @@ export const exportProjectToExcel = (
       memberType: r.memberType,
       dia: r.dia,
       qty: r.qtyParallel,
-      geometry: r.geometryInput
+      geometry: r.geometryInput,
+      lapCase: r.lapCase // Explicitly export lapCase
   }));
   const wsRuns = XLSX.utils.json_to_sheet(flatRuns);
   XLSX.utils.book_append_sheet(wb, wsRuns, "BarRuns");
@@ -174,6 +175,12 @@ export const importProjectFromExcel = async (
               const runsRaw: any[] = getSheetData("BarRuns") || [];
               if (runsRaw.length > 0) {
                   result.runs = runsRaw.map(r => {
+                      // Determine LapCase: Use exported value if exists, otherwise assume default based on MemberType
+                      let lc = r.lapCase;
+                      if (!lc) {
+                          lc = (r.memberType === 'COLUMN' ? LapCase.COLUMN_VERTICAL : LapCase.BEAM_TOP);
+                      }
+
                       return {
                         id: r.id || `R${Math.random().toString(36).substr(2,9)}`,
                         barMark: r.barMark,
@@ -183,7 +190,7 @@ export const importProjectFromExcel = async (
                         geometryInput: r.geometry,
                         totalLengthMm: 0, 
                         allowedZones: [],
-                        lapCase: (r.memberType === 'COLUMN' ? LapCase.COLUMN_VERTICAL : LapCase.BEAM_TOP)
+                        lapCase: lc as LapCase
                       }
                   });
               }

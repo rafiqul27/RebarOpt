@@ -184,11 +184,7 @@ const App: React.FC = () => {
           } else if (lapCase === LapCase.BEAM_BOTTOM) {
               // 2. Beam Bottom: 2h from support to l/3 (Two zones per span)
               // Handle SHORT SPANS: If 2h > L/3, the zones are invalid.
-              // Fallback logic: If span is very short, assume no splice is desirable, 
-              // BUT we must allow connectivity if it's a long run.
               // Strict interpretation: No zone.
-              // Robust interpretation: If span > 4h, use rule. Else, default to mid-span ? 
-              // No, let's keep it strict but ensure we don't crash.
               
               // Zone 1: Left side
               const z1Start = currentDist + (2 * h);
@@ -209,12 +205,9 @@ const App: React.FC = () => {
               }
           } 
           
-          if (!hasAddedZone) {
-              // Fallback for Other/Unknown OR if Beam Bottom was too short to fit zones.
-              // If a beam span is tiny (e.g. 1m) and depth is 600mm, 2h=1200mm. No zone fits.
-              // We should probably allow the WHOLE span in that case to avoid breaking the solver,
-              // or let the solver fail and warn.
-              // Robust choice: Allow mid-point splice for tiny spans.
+          if (!hasAddedZone && lapCase !== LapCase.BEAM_BOTTOM) {
+              // Fallback logic for NON-BEAM_BOTTOM cases (like generic runs or very short columns)
+              // We do NOT add fallback for Beam Bottom if it failed constraints, per code standards (it should be zero)
               const mid = currentDist + (segmentLen / 2);
               zones.push({
                   startMm: Math.max(currentDist, mid - 200),
